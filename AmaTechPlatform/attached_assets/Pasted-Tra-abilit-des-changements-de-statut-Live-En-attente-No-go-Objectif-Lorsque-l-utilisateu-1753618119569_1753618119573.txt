@@ -1,0 +1,66 @@
+Traçabilité des changements de statut (Live / En attente / No-go)
+🎯 Objectif :
+Lorsque l'utilisateur change le statut d'une contrepartie dans le module Roadshow, un roadshow_event doit être créé avec type: 'status_change'. Ces événements doivent apparaître dans le récapitulatif hebdomadaire.
+
+🧱 1. Backend — PostgreSQL + Drizzle
+Table roadshow_event (à étendre)
+ts
+Copier
+Modifier
+// migrations/roadshow_event.ts
+import { pgTable, serial, text, date, jsonb, integer } from 'drizzle-orm/pg-core';
+
+export const roadshow_event = pgTable('roadshow_event', {
+  id: serial('id').primaryKey(),
+  counterparty_id: integer('counterparty_id').notNull(), // FK to roadshow_counterparty.id
+  type: text('type').notNull(), // Enum logique côté app : 'interaction', 'teaser', ..., 'status_change'
+  date: date('date').notNull(),
+  meta: jsonb('meta'), // Stocke info comme { newStatus: "Live" }
+});
+✅ Si meta existe déjà, ne pas la modifier. Sinon, ajouter cette colonne.
+
+🧠 2. Backend — Endpoint Express
+Créer un POST /roadshow/:counterpartyId/status
+ts
+Copier
+Modifier
+// routes/roadshow.ts
+router.post('/:counterpartyId/status', async (req, res) => {
+  const { counterpartyId } = req.params;
+  const { newStatus } = req.body;
+
+  if (!['Live', 'En attente', 'No-go'].includes(newStatus)) {
+    return res.status(400).json({ error: 'Statut invalide' });
+  }
+
+  // update statut dans roadshow_counterparty
+  await db.update(roadshow_counterparty)
+    .set({ statut: newStatus })
+    .where(eq(roadshow_counterparty.id, parseInt(counterpartyId)));
+
+  // enregistrer l'event
+  await db.insert(roadshow_event).values({
+    counterparty_id: parseInt(counterpartyId),
+    type: 'status_change',
+    date: new Date(),
+    meta: { newStatus },
+  });
+
+  res.json({ success: true });
+});
+🖥️ 3. Frontend React
+Dans le menu déroulant de statut (Live / En attente / No-go) :
+ts
+Copier
+Modifier
+const handleStatusChange = async (newStatus) => {
+  await fetch(`/roadshow/${counterpartyId}/status`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ newStatus }),
+  });
+
+  mutate(); // ou refetcher la liste
+  toast.success(`Statut mis à jour : ${newStatus}`);
+};
+🟢 Cela permet de synchroniser le statut visible ET de créer un event pour la traçabilité.

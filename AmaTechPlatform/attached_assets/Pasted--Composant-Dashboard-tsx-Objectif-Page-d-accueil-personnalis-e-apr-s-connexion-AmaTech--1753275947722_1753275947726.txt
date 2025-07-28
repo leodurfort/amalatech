@@ -1,0 +1,67 @@
+🎯 Composant : `Dashboard.tsx`
+
+Objectif : Page d’accueil personnalisée après connexion à AmaTech.
+
+Affiche :
+- Le nom et le poste de l’utilisateur connecté (ex : "Zed Douze — Analyste M&A")
+- Une zone de bienvenue contextuelle
+- Des KPIs utiles : dossiers, relances, échéances
+- Un affichage dédié si l’utilisateur n’a aucun dossier assigné
+- Un bouton d’action rapide “+ Nouvelle interaction”
+- Le tout avec une UI sobre, inspirée de la charte Amala Partners
+
+---
+
+🧱 Données attendues :
+- `utilisateur.nom_complet` (ex: "Zed Douze")
+- `utilisateur.poste` (ex: "Analyste M&A")
+- `dossiers_assignes`: liste des dossiers sur lesquels l’utilisateur est membre
+- `nb_dossiers_actifs`: count (filtré sur statut ACTIF)
+- `nb_relances_en_retard`: count (next_chase_date < today)
+- `nb_echeances_a_venir`: count (interactions ou rappels à échéance dans les 7 jours)
+
+---
+
+🖼 Layout suggéré :
+
+- Barre top : `AmaTech` à gauche | `Nom Prénom — Poste` à droite
+- Bloc de bienvenue :
+  > "Bienvenue Zed"  
+  > "Vous pouvez suivre vos mandats, ajouter des interactions ou consulter les autres dossiers disponibles."
+
+- 4 cartes statistiques :
+  | Mes Dossiers          | Dossiers Actifs        | Relances à faire         | Échéances à venir        |
+  |-----------------------|------------------------|---------------------------|---------------------------|
+
+- Bloc : Mes Dossiers
+  - Si aucun → message personnalisé :
+    > "Aucun dossier assigné pour le moment. Vous pouvez consulter l’onglet 'Autres Mandats' pour y accéder ou contacter votre équipe."
+
+- Bouton `+ Nouvelle interaction` visible si l’utilisateur a un dossier actif
+
+---
+
+💬 Ton et style :
+- Texte en français, clair et professionnel
+- Aucune touche startup, UX sobre et efficace
+- Responsive desktop-first
+
+---
+
+🔧 Icônes (Lucide ou Heroicons, exemples) :
+- `FolderIcon` pour Mes Dossiers
+- `ActivityIcon` pour Dossiers Actifs
+- `BellAlertIcon` pour Relances
+- `CalendarIcon` pour Échéances
+
+---
+
+📌 À prévoir :
+- Ajouter champ `poste` dans modèle `Utilisateur`
+- Ajouter `next_chase_date` dans modèle de contrepartie
+- Ajouter entité `Rappel` ou `Échéance` si besoin pour enrichir la section “À venir”
+
+---
+
+✅ Résultat attendu :  
+Une landing page qui donne une vue claire des priorités de l’utilisateur connecté, qui guide si vide, et qui reste sobre et compatible avec les codes d’Amala Partners.

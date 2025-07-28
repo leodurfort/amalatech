@@ -1,0 +1,98 @@
+🎯 Objectif :
+Créer un module React “Nouveau Projet” dans la plateforme AmaTech. Accessible via le bouton “+ Nouveau projet” sur le dashboard.
+
+Ce module permet aux collaborateurs d’Amala Partners de créer un mandat M&A structuré, incluant informations générales, type de mandat, conditions économiques (admin-only), simulateur de fees, et affectation des membres.
+
+---
+
+🧱 Stack :
+- Frontend : React + Tailwind CSS
+- Backend : Node.js (MongoDB ou Prisma)
+- Déclenchement via bouton `+ Nouveau projet`
+- Redirection vers `/projet/[slug-nom-code]` après validation
+
+---
+
+📋 Structure du formulaire :
+
+### 1. Informations Générales
+- `nomClient` (input texte, obligatoire) — utilisé par défaut comme nom du projet
+- `nomCode` (input texte, **optionnel**)  
+  ➤ Si renseigné, utilisé comme nom affiché dans la plateforme  
+  ➤ Sinon fallback sur `nomClient`
+- `mandatSigne` (select : Oui / Non, obligatoire)
+- `dateSignature` (champ date, affiché uniquement si mandat signé)
+- `membres[]` (multi-select des utilisateurs — l’utilisateur connecté est ajouté automatiquement)
+
+---
+
+### 2. Type de Mandat
+- `typeMandat` (radio : Sell-side / Buy-side)
+- `categorie` (multi-select avec tags, style propre)
+  ➤ Exemples : Santé, Software, Services B2B…
+- `sousType` (select conditionnel si Sell-side) :
+  - M&A
+  - LBO
+  - Dual-track
+  - Debt
+- `statut` (select ou champ caché) : par défaut `Actif`
+
+---
+
+### 3. Conditions économiques (visibles uniquement pour les admins)
+
+Section visible si `user.role === 'admin'`.
+
+#### 💰 Retainer
+- `hasRetainer` (toggle Oui / Non)
+- `retainerMontant` (input €, visible si Oui)
+
+#### 💼 Flat Fee
+- `hasFlatFee` (toggle Oui / Non)
+- `flatFeeMontant` (input €, visible si Oui)
+
+#### 📈 Success Fee
+- `successFeeMontant` (input €)
+- `successFeeBase` (select : % de VE / % de VT)
+
+#### 🚀 Mécanisme d’accélérateur
+Jusqu’à 5 paliers (section dynamique) :
+
+Par palier :
+- `palierMontant` (€ déclencheur)
+- `palierPourcentage` (% appliqué au-delà)
+- `palierBase` (select : VE ou VT)
+
+---
+
+### 4. ⚙️ Simulateur rapide de fees
+Input : `valeurReference` (VE ou VT en €)
+
+Calcul automatique :
+- Retainer + Flat Fee
+- Success Fee
+- Accélérateurs (si seuils franchis)
+
+Affichage en temps réel :
+> “💡 Total des fees estimés : X € (soit Y % de la base VE/VT)”
+
+---
+
+✅ Après validation :
+- Création du mandat
+- Ajout automatique de l’utilisateur actuel dans les `membres`
+- Redirection vers `/projet/[slug-nom-code]`
+- Statut `Actif` par défaut
+
+---
+
+🔐 Sécurité :
+- La section “Conditions économiques” ne doit être visible et enregistrée que si `user.role === 'admin'`
+- Ajoute une vérification côté backend
+
+---
+
+🧠 UI/UX :
+- Groupe logique des champs : Informations, Mandat, Éco
+- Tooltips explicatifs : VE, VT, Accélérateur
+- Prévisualisation du nom : `nomCode` > `nomClient`

@@ -1,0 +1,123 @@
+Sprint : Récapitulatif hebdomadaire du Roadshow
+🎯 Objectif
+Afficher tous les événements survenus pendant une semaine donnée pour un projet (mandat), classés par contrepartie, de manière lisible et exploitable.
+
+🧱 Backend — Express + Drizzle ORM
+1. Route GET /projects/:projectId/roadshow/summary?week=30&year=2025
+ts
+Copier
+Modifier
+// routes/roadshow.ts
+import { and, between, eq } from 'drizzle-orm';
+import dayjs from 'dayjs';
+import isoWeek from 'dayjs/plugin/isoWeek';
+dayjs.extend(isoWeek);
+
+router.get('/:projectId/roadshow/summary', async (req, res) => {
+  const { projectId } = req.params;
+  const week = parseInt(req.query.week);
+  const year = parseInt(req.query.year);
+
+  if (!week || !year) {
+    return res.status(400).json({ error: 'Semaine et année requises' });
+  }
+
+  const startDate = dayjs().year(year).isoWeek(week).startOf('isoWeek').toDate();
+  const endDate = dayjs().year(year).isoWeek(week).endOf('isoWeek').toDate();
+
+  const events = await db
+    .select({
+      counterpartyId: roadshow_event.counterparty_id,
+      name: roadshow_counterparty.name,
+      type: roadshow_event.type,
+      date: roadshow_event.date,
+      meta: roadshow_event.meta,
+    })
+    .from(roadshow_event)
+    .innerJoin(roadshow_counterparty, eq(roadshow_event.counterparty_id, roadshow_counterparty.id))
+    .where(and(
+      between(roadshow_event.date, startDate, endDate),
+      eq(roadshow_counterparty.project_id, parseInt(projectId))
+    ))
+    .orderBy(roadshow_event.date);
+
+  res.json({ events });
+});
+💾 Requiert les tables roadshow_event et roadshow_counterparty avec champ project_id.
+
+🖥️ Frontend React — Composant <WeeklySummary />
+1. Appel de l’API
+tsx
+Copier
+Modifier
+const [week, setWeek] = useState(dayjs().isoWeek());
+const [year, setYear] = useState(dayjs().year());
+
+const { data, isLoading } = useSWR(
+  `/projects/${projectId}/roadshow/summary?week=${week}&year=${year}`,
+  fetcher
+);
+2. Formatage des événements
+ts
+Copier
+Modifier
+const formatEvent = (event) => {
+  const date = dayjs(event.date).format('DD/MM');
+  switch (event.type) {
+    case 'teaser': return `${date} — Envoi teaser`;
+    case 'nda': return `${date} — NDA envoyé`;
+    case 'im': return `${date} — IM envoyé`;
+    case 'bp': return `${date} — BP envoyé`;
+    case 'ioi': return `${date} — IOI reçue`;
+    case 'extra_send': return `${date} — Envoi complémentaire`;
+    case 'meeting': return `${date} — Réunion prévue`;
+    case 'followup': return `${date} — Relance${event.meta?.label ? ` ${event.meta.label}` : ''}`;
+    case 'interaction': return `${date} — Interaction : ${event.meta?.note || ''}`;
+    case 'status_change': return `${date} — Statut changé → ${event.meta?.newStatus}`;
+    default: return `${date} — Événement ${event.type}`;
+  }
+};
+3. Affichage dans un composant
+tsx
+Copier
+Modifier
+const grouped = useMemo(() => {
+  const byCounterparty = {};
+  data?.events?.forEach((e) => {
+    if (!byCounterparty[e.name]) byCounterparty[e.name] = [];
+    byCounterparty[e.name].push(formatEvent(e));
+  });
+  return byCounterparty;
+}, [data]);
+
+return (
+  <Card className="mt-6 p-4">
+    <div className="flex justify-between items-center">
+      <h2 className="text-lg font-semibold">📅 Récapitulatif de la semaine</h2>
+      <select value={week} onChange={(e) => setWeek(Number(e.target.value))}>
+        {Array.from({ length: 52 }).map((_, i) => (
+          <option key={i + 1} value={i + 1}>Semaine {i + 1}</option>
+        ))}
+      </select>
+    </div>
+
+    {isLoading ? <p>Chargement…</p> : (
+      Object.entries(grouped).map(([name, events]) => (
+        <div key={name} className="mt-4">
+          <h3 className="font-bold text-sm text-muted-foreground">{name}</h3>
+          <ul className="list-disc ml-6 text-sm">
+            {events.map((e, i) => <li key={i}>{e}</li>)}
+          </ul>
+        </div>
+      ))
+    )}
+  </Card>
+);
+✅ Résultat attendu :
+Par défaut, la semaine en cours est sélectionnée
+
+Pour chaque contrepartie, on voit les événements classés
+
+L'information vient directement de la base roadshow_event
+
+Chaque type d’événement a son libellé clair

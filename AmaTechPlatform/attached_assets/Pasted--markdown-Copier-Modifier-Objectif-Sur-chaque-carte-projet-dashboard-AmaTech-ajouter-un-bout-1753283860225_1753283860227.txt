@@ -1,0 +1,88 @@
+
+markdown
+Copier
+Modifier
+🎯 Objectif :
+Sur chaque carte projet (dashboard AmaTech), ajouter un bouton `...` (3 points verticaux) qui ouvre un menu contextuel **uniquement visible pour les admins**.
+
+Ce menu doit contenir :
+
+### ✅ 1. “Changer le statut”
+- Ouvre un `Dropdown` ou `Popover` avec les 4 statuts possibles :
+  - Actif
+  - Closed
+  - Stand-by
+  - Failed
+- Quand l’admin sélectionne un statut :
+  - Appelle une route `PATCH /api/projets/:id/statut`
+  - Met à jour le statut côté front (sans recharger)
+  - Affiche un toast “Statut mis à jour”
+
+### 🧠 Comportement :
+- Si un projet n’est **pas Actif**, il **n’apparaît plus** dans la liste principale “Mes dossiers”
+- Ces projets seront affichés dans un autre onglet “Historique”
+
+---
+
+### 🗑️ 2. “Supprimer le projet”
+- Ouvre une modale de confirmation :
+Voulez-vous vraiment supprimer ce mandat ?
+Cette action est irréversible.
+
+php-template
+Copier
+Modifier
+- Si confirmé :
+- Appelle `DELETE /api/projets/:id`
+- Supprime la carte du DOM
+- Affiche un toast “Mandat supprimé”
+
+---
+
+### ⚙️ Intégration front :
+- Le bouton `...` est visible **seulement si `user.role === 'admin'`**
+- Utiliser un `DropdownMenu` élégant (ex : shadcn/ui, Headless UI, Radix UI)
+- Exemple de structure :
+
+```jsx
+<DropdownMenu>
+<DropdownMenuTrigger>
+  <MoreVerticalIcon />
+</DropdownMenuTrigger>
+<DropdownMenuContent>
+  <DropdownMenuItem onClick={() => openModalModifier()}>✏️ Modifier le projet</DropdownMenuItem>
+  <DropdownMenuSub>
+    <DropdownMenuSubTrigger>🔄 Changer le statut</DropdownMenuSubTrigger>
+    <DropdownMenuSubContent>
+      <DropdownMenuItem onClick={() => updateStatut("Actif")}>Actif</DropdownMenuItem>
+      <DropdownMenuItem onClick={() => updateStatut("Closed")}>Closed</DropdownMenuItem>
+      <DropdownMenuItem onClick={() => updateStatut("Stand-by")}>Stand-by</DropdownMenuItem>
+      <DropdownMenuItem onClick={() => updateStatut("Failed")}>Failed</DropdownMenuItem>
+    </DropdownMenuSubContent>
+  </DropdownMenuSub>
+  <DropdownMenuSeparator />
+  <DropdownMenuItem className="text-red-600" onClick={openConfirmDeleteModal}>
+    🗑️ Supprimer
+  </DropdownMenuItem>
+</DropdownMenuContent>
+</DropdownMenu>
+🔐 Backend à prévoir :
+PATCH /api/projets/:id/statut
+Body : { statut: "Closed" }
+
+DELETE /api/projets/:id
+
+✅ Résultat attendu
+Expérience fluide et modulaire
+
+Actions accessibles uniquement aux admins
+
+Aucun blocage UI
+
+Statuts mis à jour sans recharger
+
+Suppression propre et confirmée
+
+yaml
+Copier
+Modifier

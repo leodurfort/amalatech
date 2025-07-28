@@ -1,0 +1,111 @@
+Objectif :
+Afficher un historique chronologique des étapes-clés du projet M&A :
+
+Ajout manuel ou semi-automatique d’événements
+
+Stockage local temporaire (mocked), puis passage à Firestore
+
+UX très simple : date + type d’événement + commentaire
+
+🧩 Composant : Timeline.jsx
+1. Structure du composant
+jsx
+Copier
+Modifier
+import { useState } from "react";
+
+export default function Timeline() {
+  const [events, setEvents] = useState([
+    {
+      id: 1,
+      date: "2025-07-10",
+      label: "Kick-off Meeting",
+      comment: "Réunion de lancement avec le client et les conseils.",
+    },
+    {
+      id: 2,
+      date: "2025-07-18",
+      label: "Infopack envoyé",
+      comment: "Première version envoyée aux acquéreurs prioritaires.",
+    },
+  ]);
+
+  const [newEvent, setNewEvent] = useState({
+    date: "",
+    label: "",
+    comment: "",
+  });
+
+  function handleAdd() {
+    const id = Date.now();
+    setEvents([...events, { ...newEvent, id }]);
+    setNewEvent({ date: "", label: "", comment: "" });
+  }
+
+  return (
+    <div className="max-w-3xl space-y-6">
+
+      <h2 className="text-xl font-semibold">Timeline / Journal du process</h2>
+
+      {/* Formulaire d'ajout */}
+      <div className="bg-white border p-4 rounded space-y-2">
+        <h3 className="font-medium">Ajouter une étape</h3>
+        <input
+          type="date"
+          className="border p-2 rounded w-full"
+          value={newEvent.date}
+          onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
+        />
+        <input
+          type="text"
+          placeholder="Nom de l'étape (ex. Kick-off, VDR ouverte…)"
+          className="border p-2 rounded w-full"
+          value={newEvent.label}
+          onChange={(e) => setNewEvent({ ...newEvent, label: e.target.value })}
+        />
+        <textarea
+          placeholder="Commentaire / détails"
+          className="border p-2 rounded w-full"
+          value={newEvent.comment}
+          onChange={(e) => setNewEvent({ ...newEvent, comment: e.target.value })}
+        />
+        <button
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+          onClick={handleAdd}
+        >
+          Ajouter
+        </button>
+      </div>
+
+      {/* Liste des événements */}
+      <ul className="space-y-3">
+        {events
+          .sort((a, b) => new Date(a.date) - new Date(b.date))
+          .map((event) => (
+            <li
+              key={event.id}
+              className="bg-white p-4 border rounded flex flex-col"
+            >
+              <div className="text-sm text-gray-500">
+                {new Date(event.date).toLocaleDateString("fr-FR")}
+              </div>
+              <div className="text-md font-semibold">{event.label}</div>
+              <div className="text-sm text-gray-700">{event.comment}</div>
+            </li>
+          ))}
+      </ul>
+    </div>
+  );
+}
+🔄 Stockage temporaire
+Pour l’instant tout est en local (useState). Quand c’est validé visuellement :
+
+➕ on connectera à Firestore (/mandats/:id/timeline)
+
+➕ on ajoutera des icônes d’étape, ou un filtre (optionnel)
+
+🔥 Bonus à venir (phase 2) :
+Génération automatique d’événements à partir d’actions : ex. “VDR ouverte”, “LOI reçue”, “Phase 2 lancée”
+
+Timeline visuelle façon frise horizontale (si besoin)
+

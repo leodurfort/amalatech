@@ -1,0 +1,76 @@
+On ne veut pas additionner les pourcentages avec un Success Fee de base.
+À la place, on veut deux modes exclusifs :
+
+Mode simple : Success Fee de x % sur la VE/VT
+
+Mode avancé (mécanisme accélérateur) :
+
+Un système par tranches progressives
+
+Le % applicable dépend entièrement de la tranche, sans Success Fee "de base"
+
+🧭 UX attendue
+Un bouton radio ou toggle au début du bloc :
+
+⭕ Success Fee simple
+
+⭕ Mécanisme accélérateur (progressif)
+
+✍️ Prompt Replit complet
+txt
+Copier
+Modifier
+Je souhaite améliorer la section "Conditions économiques" de mon formulaire AmaTech (React + Node.js).  
+Actuellement, le Success Fee est fixe ou progressif, mais la logique est confuse.
+
+Voici les attentes très précises :
+
+---
+
+🎯 1. Mode de calcul à choisir (obligatoire)
+
+Mettre deux options exclusives via bouton radio ou toggle :
+
+- ⭕ **Success Fee simple**
+  - Affiche un champ : `Success Fee (%)`
+  - Affiche un select : `Base de calcul : VE ou VT`
+
+- ⭕ **Success Fee progressif (mécanismes accélérateurs)**  
+  - Permet d’ajouter jusqu’à 5 **tranches**
+  - Chaque tranche contient :
+    - Champ **Montant minimum (€)**
+    - Champ **Montant maximum (€)** (si vide = tranche ouverte)
+    - Champ **Pourcentage (%)**
+
+  - Tranches non chevauchantes, ordonnées automatiquement
+  - Résumé lisible en dessous :
+
+Configuration actuelle :
+0 – 20 000 000 € : 2%
+20 000 000 – 25 000 000 € : 2.5%
+
+25 000 000 € : 3%
+
+yaml
+Copier
+Modifier
+
+🧠 À noter : le pourcentage de chaque tranche **remplace totalement le Success Fee** de base. On ne les additionne pas.
+
+---
+
+📦 Format backend pour une tranche :
+
+```ts
+{
+  min: number,     // optionnel pour la première tranche
+  max: number | null, // null pour les tranches "open"
+  percent: number  // le % appliqué si VE/VT tombe dans cette tranche
+}
+📄 Le formulaire stocke aussi :
+
+successFeeMode: 'simple' | 'progressive'
+
+base: 'VE' | 'VT' (uniquement en mode simple)
+
+Merci de générer un composant React propre et réactif, avec validation de cohérence entre tranches (pas de chevauchement, etc.).

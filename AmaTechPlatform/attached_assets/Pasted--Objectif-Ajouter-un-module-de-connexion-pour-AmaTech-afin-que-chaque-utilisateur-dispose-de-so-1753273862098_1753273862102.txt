@@ -1,0 +1,112 @@
+🧠 Objectif : Ajouter un module de connexion pour AmaTech, afin que chaque utilisateur dispose de son propre compte, voie les dossiers sur lesquels il travaille en priorité, et accède en lecture aux autres dossiers.
+
+🧱 Stack :
+- Frontend : React
+- Backend : Node.js (Express ou Next.js API)
+- Auth : Clerk (ou Auth0 / Supabase Auth si besoin)
+- BDD : Prisma + SQLite
+- Langue : Français 🇫🇷
+
+---
+
+## 🔐 Authentification
+
+Mettre en place un module de connexion par email (passwordless ou avec mot de passe).
+
+- Stocker les utilisateurs dans une table `Utilisateur`
+- Chaque utilisateur peut être **assigné à 1 ou plusieurs dossiers**
+- Les dossiers sont classés à l'écran selon l'implication de l'utilisateur
+
+---
+
+## 🧱 Schéma de données étendu (Prisma)
+
+```prisma
+model Utilisateur {
+  id          String   @id @default(uuid())
+  nom         String
+  email       String   @unique
+  mot_de_passe String? // selon stratégie d’auth
+  created_at  DateTime @default(now())
+
+  dossiers    DossierMembre[]
+  interactions Interaction[] @relation("AuteurInteractions")
+}
+
+model Dossier {
+  id             String   @id @default(uuid())
+  nom            String
+  type           DossierType
+  statut         DossierStatut
+  date_debut     DateTime
+  date_cloture   DateTime?
+  description    String?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  membres        DossierMembre[]
+  societes       Societe[]
+  interactions   Interaction[]
+}
+
+model DossierMembre {
+  id            String   @id @default(uuid())
+  utilisateur_id String
+  dossier_id     String
+  role           String // ex : "responsable", "collaborateur", etc.
+
+  utilisateur   Utilisateur @relation(fields: [utilisateur_id], references: [id])
+  dossier       Dossier     @relation(fields: [dossier_id], references: [id])
+
+  @@unique([utilisateur_id, dossier_id])
+}
+🖥️ Comportement frontend (React)
+Lors de la connexion :
+Récupérer l’id de l’utilisateur via l’auth
+
+Faire un GET /api/dossiers?membre=true pour afficher :
+
+Dossiers où je suis assigné (onglet "Mes Dossiers")
+
+Autres dossiers accessibles (onglet "Autres Dossiers")
+
+Exemple de vue Accueil :
+diff
+Copier
+Modifier
+Bienvenue Jean Dupont
+
+📂 Mes Dossiers
+- Cession TechCo
+- Acquisition BioPharma
+
+📁 Autres Mandats
+- Levée Series B - MedX
+- Sell-side FintechCo
+🧰 API à créer
+POST /api/login → Connexion utilisateur
+
+GET /api/utilisateur → Infos utilisateur connecté
+
+GET /api/dossiers?membre=true → Dossiers assignés à l'utilisateur
+
+GET /api/dossiers?membre=false → Tous les autres dossiers
+
+POST /api/dossiers/:id/assigner → Ajouter un membre à un dossier
+
+✨ Bonus (non obligatoire au départ)
+Champ role dans DossierMembre pour moduler les droits (ex : lecture seule, contributeur, responsable)
+
+Historisation : toutes les Interaction ou Note enregistrent auteur_id pour savoir qui a agi
+
+Notifications sur les dossiers suivis
+
+🧠 Résumé UX
+Je me connecte
+
+Je vois d’abord les dossiers sur lesquels je travaille
+
+Je peux naviguer vers d'autres dossiers si besoin
+
+L’interface est personnalisée et filtrée dès le login
+

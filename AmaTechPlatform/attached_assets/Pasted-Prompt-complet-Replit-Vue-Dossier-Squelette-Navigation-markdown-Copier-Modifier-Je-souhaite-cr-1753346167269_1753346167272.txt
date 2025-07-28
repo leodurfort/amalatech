@@ -1,0 +1,80 @@
+Prompt complet Replit – Vue Dossier (Squelette & Navigation)
+markdown
+Copier
+Modifier
+Je souhaite créer un composant React pour la vue détaillée d'un dossier (mandat M&A) dans l'application AmaTech.
+
+Voici exactement ce que je veux :
+
+## ✅ Objectif :
+Mettre en place le **squelette React Router** et la structure basique de navigation avec des blocs vides prêts à accueillir du contenu ensuite.
+
+---
+
+## 🧩 **Structure à implémenter (navigation par onglets à gauche)** :
+
+### 🖥️ Header fixe :
+Toujours visible en haut de la page :
+- Titre : Nom du client ou du code projet
+- Badge pour le statut (Actif / Closed / Failed / Stand-by)
+- Sous-titre : Type mandat (Sell-side, Buy-side), sous-type (M&A, LBO...)
+- Date début projet
+- Équipe (membres affichés simplement)
+- Deux boutons (admin uniquement, pas de logique encore) :
+  - "Modifier"
+  - "Actions" (dropdown placeholder)
+
+---
+
+### 📌 Menu latéral gauche (navigation claire par onglets) :
+
+- **Timeline / Journal du process**
+- **To-do List**
+- **Roadshow**
+- **Documents & Toolbox**
+- **Journal de bord**
+- **Q&A**
+- **Working Group List**
+- **Synthèse économique (admin)**
+
+---
+
+### ⚙️ React Router :
+Tu dois implémenter le routing React de façon propre avec une structure de dossier comme ceci :
+
+/src
+├── App.jsx
+├── components
+│ ├── ProjectHeader.jsx
+│ └── Sidebar.jsx
+├── pages
+│ └── ProjectDetail.jsx (page principale)
+└── router
+└── index.jsx (configuration routes React Router)
+
+markdown
+Copier
+Modifier
+
+### 🛠️ Comportement attendu :
+
+- Quand on arrive sur `/projects/:id`, charger la page ProjectDetail
+- Afficher le header statique + Sidebar (menu vertical à gauche)
+- Sidebar contient des liens vers les différents onglets (pas encore fonctionnels, juste UI)
+- Chaque onglet cliqué affiche pour l'instant un placeholder du type :
+<h2>Timeline / Journal du process (contenu à venir)</h2> ```
+📚 Libraries UI à utiliser (au choix selon disponibilité dans ton Replit) :
+Tailwind CSS (préféré)
+
+shadcn/ui (optionnel, conseillé)
+
+React Router Dom v6 pour navigation
+
+🎨 Style & UX attendus :
+Simple, sobre, professionnel, banque d'affaires compliant.
+
+Menu clair à gauche, header bien visible en haut.
+
+Sections placeholder simples et visuelles au milieu pour commencer.
+
+Génère ce composant proprement et clairement pour que je puisse immédiatement poursuivre avec les blocs suivants dans mon sprint.

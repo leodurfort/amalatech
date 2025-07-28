@@ -1,0 +1,78 @@
+on frontend n'arrive pas à grouper les événements par contrepartie, ce qui fait que :
+
+Les counterpartyName sont probablement undefined côté backend (cf. undefined dans le tout premier rendu).
+
+Et donc :
+
+le grouped[name] ne trouve rien
+
+le nombre de contreparties actives tombe à 0
+
+tu n’as aucun bloc visible même si les événements sont bien chargés.
+
+✅ Solution complète et sûre
+Voici un prompt Replit complet pour corriger proprement le backend et frontend :
+
+🧱 1. Backend – Fix GET /projects/:id/roadshow/summary
+Le problème vient sans doute du leftJoin, probablement mal aligné. Voici un exemple clair :
+
+ts
+Copier
+Modifier
+// GET /projects/:id/roadshow/summary?week=30&year=2025
+
+const startOfWeek = getMondayDate(week, year);
+const endOfWeek = getSundayDate(week, year);
+
+const events = await db
+  .select({
+    counterpartyId: roadshow_event.counterparty_id,
+    counterpartyName: roadshow_counterparty.name,
+    type: roadshow_event.type,
+    date: roadshow_event.date,
+    meta: roadshow_event.meta,
+  })
+  .from(roadshow_event)
+  .innerJoin(
+    roadshow_counterparty,
+    eq(roadshow_event.counterparty_id, roadshow_counterparty.id)
+  )
+  .where(
+    and(
+      eq(roadshow_counterparty.project_id, projectId),
+      between(roadshow_event.date, startOfWeek, endOfWeek)
+    )
+  );
+✅ Note importante : utilise bien .innerJoin() si tu veux éviter les undefined, et assure-toi que la colonne roadshow_counterparty.name existe.
+
+🖥️ 2. Frontend – Sécuriser le regroupement
+Remplace le regroupement grouped par :
+
+ts
+Copier
+Modifier
+const grouped = useMemo(() => {
+  const result = {};
+  events?.forEach((event) => {
+    const name = event.counterpartyName?.trim() || "Contrepartie inconnue";
+    if (!result[name]) result[name] = [];
+    result[name].push(event);
+  });
+  return result;
+}, [events]);
+Et dans le composant, ajoute ce log temporaire pour vérifier :
+
+ts
+Copier
+Modifier
+console.log('Events loaded:', events);
+console.log('Grouped by name:', grouped);
+✅ Vérification Replit
+Checklist rapide à inspecter dans la console :
+
+events doit contenir un tableau avec counterpartyName: 'Tescc' ou similaire
+
+grouped doit avoir des clés lisibles comme Tescc ou Contrepartie 1
+
+Si tout est undefined, c’est le .join() ou la colonne qui est mal mappée dans Drizzle.
+

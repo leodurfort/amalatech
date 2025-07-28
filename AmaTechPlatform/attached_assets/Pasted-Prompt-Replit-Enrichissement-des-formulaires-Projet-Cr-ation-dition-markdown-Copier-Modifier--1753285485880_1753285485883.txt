@@ -1,0 +1,110 @@
+Prompt Replit — Enrichissement des formulaires Projet (Création & Édition)
+markdown
+Copier
+Modifier
+🎯 Objectif :
+Enrichir les formulaires "Créer un projet" et "Modifier un projet" dans AmaTech avec deux nouveaux blocs :
+1. Équipe interne (autocomplétion)
+2. Bloc Mandat (admin uniquement, avec pipeline + simulateur pondéré)
+
+---
+
+## 🔹 1. Bloc Équipe interne (pour tous les utilisateurs)
+
+Ajoute un champ `membresEquipe` dans le formulaire, permettant de sélectionner plusieurs collaborateurs internes Amala.
+
+🔧 Comportement souhaité :
+- Champ libre avec suggestions (autocomplétion, type combobox)
+- Par exemple : je tape "Ze" → suggestion “Zed Douze”
+- Design esthétique, même avec une longue liste (50+ noms)
+- Utilise un composant adapté comme `Combobox`, `Command`, ou `Autocomplete` (shadcn/ui, Headless UI, Downshift)
+
+📤 Stocker les membres sous forme de tableau :
+```ts
+membresEquipe: [ "Zed Douze", "Claire Marchand" ]
+⚠️ Si l'utilisateur courant est sélectionné, il ne doit pas pouvoir se supprimer lui-même.
+
+🔒 2. Bloc "Mandat" (visible uniquement si user.role === 'admin')
+Ajoute un bloc sous les champs habituels, visible uniquement pour les admins.
+
+Contenu du bloc :
+
+💰 Calcul des fees (identique au simulateur)
+hasRetainer + retainerMontant
+
+hasFlatFee + flatFeeMontant
+
+successFeePourcentage + base (VE/VT)
+
+accélérateurs[] (seuil + % + base) — max 5
+
+🔁 Nouveau champ : Pipeline
+pipelinePourcentage (nombre, input entre 0 et 100)
+
+Label : “Pondération pipeline (en %)”
+
+Placeholder : “Ex. : 80”
+
+Aide : “Permet d’ajuster la valeur VE/VT retenue pour simuler les fees (probabilité de signature, etc.)”
+
+📤 À stocker :
+
+ts
+Copier
+Modifier
+pipeline: {
+  pondération: 80 // en %
+}
+⚙️ Simulateur mis à jour (sous le champ pipeline)
+Input :
+
+valeurVEVT (nombre, ex: 30 000 000)
+
+Affichage dynamique :
+
+Pondération appliquée : valeurEffective = valeurVEVT × pipelinePourcentage / 100
+
+Affiche :
+
+yaml
+Copier
+Modifier
+Valeur pondérée retenue : 24 000 000 €
+Total des fees estimés : 430 000 € (soit 1,79 % de la VE)
+💡 Cette valeur sera utilisée plus tard dans une page "Pipeline globale"
+
+🧠 Structure JSON backend
+Met à jour ton modèle Projet :
+
+ts
+Copier
+Modifier
+{
+  nomClient: string,
+  nomCode?: string,
+  membresEquipe: string[],
+  conditionsEconomiques: {
+    retainer?: number,
+    flatFee?: number,
+    successFeePourcentage?: number,
+    successFeeBase?: "VE" | "VT",
+    accelerateurs?: [
+      {
+        seuil: number,
+        pourcentage: number,
+        base: "VE" | "VT"
+      }
+    ]
+  },
+  pipeline: {
+    pondération: number // 0–100
+  }
+}
+✅ Comportement attendu
+Le champ équipe est fluide, rapide à chercher, agréable à l’œil
+
+Le bloc Mandat n’apparaît que pour les admins
+
+Le simulateur est mis à jour en temps réel selon la pondération
+
+Toutes les données sont bien stockées et modifiables depuis la page "Modifier projet"

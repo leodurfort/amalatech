@@ -1,0 +1,54 @@
+Crée dans une app React + Node.js un système de menu contextuel d’administration sur une carte de projet dans AmaTech.
+
+### Comportement global :
+- Sur chaque carte projet, afficher à droite un bouton `…` (trois points verticaux)
+- Ce bouton ouvre un petit menu contextuel (dropdown) avec les actions possibles
+- Les actions doivent être visibles **uniquement pour les utilisateurs ayant le rôle `admin`**
+
+---
+
+### ⚙️ Actions proposées (menu contextuel)
+
+1. **Modifier les informations du projet**
+   - Ouvre un `modal` intitulé “Modifier les informations du mandat”
+   - Ce modal contient le même formulaire que celui utilisé lors de la création d’un projet (`Nouveau projet`)
+   - Le texte des boutons / titres doit être mis à jour : par exemple, “Créer” devient “Mettre à jour”
+
+2. **Changer le statut du projet**
+   - Sous-menu ou dialogue avec les options : `Actif`, `Closed`, `Stand-by`, `Failed`
+   - Lorsqu’un statut ≠ `Actif` est sélectionné :
+     - Le projet ne s’affiche **plus dans la vue “Mes Dossiers”**
+     - Il est stocké pour être accessible plus tard dans une vue dédiée à l’historique ou l’archive
+   - Confirmation visuelle : “Statut du mandat mis à jour avec succès”
+
+3. **Supprimer le projet**
+   - Ouvre une modale de confirmation : “Voulez-vous vraiment supprimer ce mandat ? Cette action est irréversible.”
+   - Si l’utilisateur confirme, supprime définitivement le projet côté backend
+   - Afficher un toast de succès ou d’erreur
+
+---
+
+### 🔐 Règle d’accès :
+- Le bouton `…` ne s’affiche **que si l’utilisateur connecté est `admin`**
+- Sinon, il est complètement masqué dans le DOM (pas seulement caché visuellement)
+
+---
+
+### 🎨 Style :
+- Utiliser un `dropdown` simple et élégant (ex : Radix UI, Headless UI, shadcn/ui)
+- Icône `…` cliquable en haut à droite de la carte
+- Modal de modification identique à la création d’un projet, mais en mode édition (avec les champs préremplis)
+
+---
+
+### 🔄 Backend :
+- Route API `PUT /api/projets/:id` → pour modifier un projet
+- Route `PATCH /api/projets/:id/statut` → pour changer uniquement le statut
+- Route `DELETE /api/projets/:id` → pour supprimer un projet
+
+---
+
+### 🔁 Bonus UX :
+- Une fois le projet modifié ou supprimé → rafraîchir automatiquement la liste sans recharger la page
+- Utiliser des toasts pour confirmer succès / erreur
+

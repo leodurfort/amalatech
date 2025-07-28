@@ -1,0 +1,91 @@
+Crée un composant propre et stable pour modifier un projet M&A dans AmaTech.
+
+🎯 Objectif :
+Corriger le bug de blocage en reconstruisant le composant "Modal de modification" de façon indépendante, modulaire et fiable.
+
+📦 Stack : React + Tailwind CSS (ou shadcn/ui si utilisé)
+
+---
+
+## 🧱 Architecture
+
+Crée un composant React `<ProjetModal />` qui accepte les props suivantes :
+
+```tsx
+<ProjetModal
+  open={isModalOpen}
+  onClose={() => {
+    setIsModalOpen(false);
+    setProjetSelectionne(null);
+  }}
+  projet={projetSelectionne} // objet contenant les infos à modifier
+  mode="edit" // ou "create" dans le futur
+/>
+Le composant doit être entièrement contrôlé par les props. Aucun useState interne pour l’ouverture/fermeture.
+
+🧠 État côté parent (ex. Dashboard.tsx)
+tsx
+Copier
+Modifier
+const [isModalOpen, setIsModalOpen] = useState(false);
+const [projetSelectionne, setProjetSelectionne] = useState(null);
+
+const handleEditClick = (projet) => {
+  setProjetSelectionne(projet);
+  setIsModalOpen(true);
+};
+Appelle ensuite :
+
+tsx
+Copier
+Modifier
+{isModalOpen && projetSelectionne && (
+  <ProjetModal
+    open={isModalOpen}
+    projet={projetSelectionne}
+    mode="edit"
+    onClose={() => {
+      setIsModalOpen(false);
+      setProjetSelectionne(null);
+    }}
+  />
+)}
+🖼️ Structure interne du ProjetModal
+Utilise Dialog de shadcn/ui ou un simple <div className="fixed inset-0">
+
+Inclure :
+
+Titre : “Modifier les informations du mandat”
+
+Champs pré-remplis : nomClient, nomCode, typeMandat, etc.
+
+Boutons :
+
+“Annuler” → appelle onClose()
+
+“Mettre à jour” → valide les inputs, appelle un onSubmit(projet) (optionnel à ce stade)
+
+⚠️ Comportement crucial
+✅ À la fermeture (via ✖ ou "Annuler") :
+
+onClose() doit être appelé
+
+Aucun backdrop (<div class="fixed inset-0">) ne doit rester monté
+
+Le composant <ProjetModal /> doit être démonté du DOM
+
+✅ Résultat attendu
+Aucun blocage d’interaction après fermeture
+
+Pas de doublon de modal
+
+Comportement 100% contrôlé par le parent
+
+Reutilisable pour la création de projet plus tard (mode="create")
+
+💡 Tips bonus :
+
+Pour éviter le backdrop bloquant : place tout le modal dans un <div className="z-50"> avec un backdrop z-40 qui disparaît si open === false
+
+Tu peux encapsuler le tout dans un Portal si nécessaire (shadcn/ui le fait automatiquement)
+

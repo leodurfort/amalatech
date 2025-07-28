@@ -1,0 +1,82 @@
+corriger le problème de non-rafraîchissement immédiat des événements dans la vue "Récapitulatif" sur la page Roadshow d’AmaTech.
+
+🧠 Contexte
+Tu as deux onglets : Vue tableau et Récapitulatif
+
+Quand tu ajoutes une interaction / statut / relance dans Vue tableau, le Récapitulatif ne se met pas à jour à chaud
+
+Il faut donc forcer un refetch() des données lors du changement d’onglet
+
+✅ Hypothèse : tu utilises SWR (très probable d'après les mutate() déjà présents)
+🧱 Backend : inchangé
+Tu as déjà un endpoint /api/roadshow/[projectId]/events?week=30&year=2025, rien à modifier côté serveur.
+
+🧑‍💻 Frontend — Étapes à appliquer
+1. 🎯 Composant parent RoadshowPage.tsx (ou équivalent)
+Ajoute la gestion de l’onglet actif avec un state local :
+
+tsx
+Copier
+Modifier
+const [currentTab, setCurrentTab] = useState<'tableau' | 'recap'>('tableau');
+
+const handleTabChange = (tab: 'tableau' | 'recap') => {
+  setCurrentTab(tab);
+
+  if (tab === 'recap') {
+    // Refetch les événements côté SWR
+    mutate(`/api/roadshow/${projectId}/events?week=${selectedWeek}&year=${selectedYear}`);
+  }
+};
+2. 🧩 Boutons d’onglet
+tsx
+Copier
+Modifier
+<div className="flex gap-2 mb-4">
+  <button
+    onClick={() => handleTabChange('tableau')}
+    className={`btn ${currentTab === 'tableau' ? 'btn-primary' : 'btn-outline'}`}
+  >
+    Vue tableau
+  </button>
+  <button
+    onClick={() => handleTabChange('recap')}
+    className={`btn ${currentTab === 'recap' ? 'btn-primary' : 'btn-outline'}`}
+  >
+    Récapitulatif
+  </button>
+</div>
+3. 📦 Chargement conditionnel des vues
+tsx
+Copier
+Modifier
+{currentTab === 'tableau' && <RoadshowTable />}
+{currentTab === 'recap' && (
+  <RoadshowRecap
+    projectId={projectId}
+    selectedWeek={selectedWeek}
+    selectedYear={selectedYear}
+  />
+)}
+4. 📈 Composant RoadshowRecap.tsx
+Ajoute le SWR comme ceci :
+
+tsx
+Copier
+Modifier
+const { data, error, isLoading } = useSWR(
+  `/api/roadshow/${projectId}/events?week=${selectedWeek}&year=${selectedYear}`
+);
+Et affiche un loader si besoin :
+
+tsx
+Copier
+Modifier
+if (isLoading) return <div>Chargement du récapitulatif...</div>;
+✅ Résultat attendu
+Chaque fois que tu passes de "Vue tableau" → "Récapitulatif", les événements sont auto-refresh
+
+Plus besoin de revenir au dashboard
+
+Données toujours à jour 💯
+

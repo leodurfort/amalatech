@@ -1,0 +1,119 @@
+Prompt complet pour Replit
+markdown
+Copier
+Modifier
+🛠️ Projet : AmaTech – Plateforme interne pour banque d’investissement
+
+📚 Stack :
+- Frontend : React + Tailwind CSS
+- Backend : Node.js (Express)
+- Base de données : SQLite (via Prisma)
+- API : REST
+- Langue : Français
+
+🎯 Fonctionnalité principale (MVP) : Roadshow CRM
+Suivi des contreparties dans un process de vente M&A :
+- Nom de société
+- Contact principal
+- Statut dans le process (Non contacté, NDA envoyé, Signé, IOI, Abandonné, etc.)
+- Date du dernier échange
+- Date de relance prévue
+- Historique des échanges
+- Notes internes
+
+🧱 Entités communes à modéliser (base de données) :
+1. `Societe`
+   - id
+   - nom
+   - secteur
+   - site_web
+   - description
+   - est_acheteur (bool)
+   - est_client (bool)
+   - timestamps
+
+2. `Contact`
+   - id
+   - nom_complet
+   - poste
+   - email
+   - téléphone
+   - linkedin
+   - societe_id (relation)
+   - notes
+   - dernier_contact_at
+   - timestamps
+
+3. `Processus`
+   - id
+   - nom
+   - societe_client_id (FK)
+   - type (Vente, Achat, Levée de fonds…)
+   - statut
+   - date_debut
+   - date_cloture
+
+4. `Interaction`
+   - id
+   - processus_id (FK)
+   - societe_id (FK)
+   - contact_id (FK)
+   - type (Appel, Email, Réunion, NDA envoyé, etc.)
+   - date
+   - notes
+   - auteur (string)
+   - timestamps
+
+5. `Rappel`
+   - id
+   - cible_type (Contact ou Société)
+   - cible_id
+   - date_echeance
+   - note
+   - cree_par
+
+💻 Frontend :
+- Interface en français
+- Vue Kanban pour le suivi des sociétés dans un process
+- Formulaires pour ajouter/modifier :
+  - Sociétés
+  - Contacts
+  - Interactions
+  - Rappels
+- Badge rouge sur relances dépassées
+- Barre de recherche et filtres par statut
+
+🗂️ Backend :
+- Routes REST `/api/societes`, `/api/contacts`, `/api/processus`, `/api/interactions`, `/api/rappels`
+- Séparation claire des fichiers de routes, contrôleurs, modèles
+- Utilisation de Prisma pour les requêtes SQL
+- Middleware pour gestion des erreurs et logs
+
+🚀 MVP : Interface interne pour Amala Partners pour suivre le process acheteur d’un mandat de cession, avec possibilité d’ajouter des contacts, historiser les échanges, et planifier des relances.
+
+✨ Étapes futures :
+- Export PDF pour reporting client
+- Génération d’un email hebdo d’update client
+- Dashboard d’avancement d’un process
+- Intégration API enrichissement email (type Hunter.io)
+
+📁 Arborescence suggérée :
+/frontend
+/components
+/pages
+/features/Roadshow
+/entities/Societe, Contact, etc.
+
+/backend
+/routes
+/controllers
+/models
+/prisma/schema.prisma
+
+yaml
+Copier
+Modifier
+
+🧠 Conseil : garder la logique métier dans le backend, les composants UI propres et réutilisables dans le frontend.
+
+Bonne construction de la plateforme AmaTech !

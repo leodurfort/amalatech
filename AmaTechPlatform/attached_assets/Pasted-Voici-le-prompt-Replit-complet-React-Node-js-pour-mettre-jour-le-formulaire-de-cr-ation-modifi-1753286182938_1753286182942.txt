@@ -1,0 +1,116 @@
+Voici le prompt Replit complet (React + Node.js) pour mettre à jour le formulaire de création/modification de projet dans AmaTech, avec :
+
+Un champ supplémentaire : Date de début de projet
+
+Un bloc "Conditions économiques (Admin uniquement)" visible uniquement si l’utilisateur est admin
+
+Un calculateur de success fees amélioré, avec :
+
+Retainer
+
+Flat fee
+
+Success fee
+
+Mécanismes accélérateurs
+
+Champ clair pour la valeur de base (VE/VT)
+
+Champ pour la pondération pipeline
+
+Résultat visible en clair avec formule
+
+🧠 Prompt Replit à copier-coller :
+txt
+Copier
+Modifier
+Je construis une plateforme en React + Node.js appelée AmaTech, pour gérer des mandats M&A dans une banque d’affaires. Je souhaite modifier le formulaire de création/modification d’un projet.
+
+Voici ce que je veux faire :
+
+---
+
+✅ 1. **Ajout d’un champ "Date de début de projet"**
+À ajouter juste en dessous du champ "Sous-type".
+Type : DatePicker
+Label : `Date de début de projet`
+Champ requis.
+
+---
+
+✅ 2. **Bloc “Conditions économiques (Admin uniquement)”**
+Ce bloc ne doit être affiché que si l’utilisateur connecté a `role === 'admin'`.
+
+Ajoute ce bloc dans un composant React à part si besoin (`EconomicConditionsCard`) et insère-le à la fin du formulaire principal de projet.
+
+```jsx
+{user?.role === 'admin' && (
+  <EconomicConditionsCard />
+)}
+Le bloc doit contenir :
+
+✅ Checkbox Retainer
+Si coché : input du montant (€)
+
+✅ Checkbox Flat fee
+Si coché : input du montant (€)
+
+✅ Champ Success Fee (%)
+
+Input du pourcentage
+
+Sélecteur de base : VE ou VT
+
+✅ Champ Mécanismes accélérateurs
+Une liste dynamique avec max 5 lignes.
+Pour chaque ligne :
+
+Montant minimum d’assiette
+
+Pourcentage à appliquer
+
+Choix entre VE ou VT
+
+Bouton pour supprimer la ligne
+
+Bouton pour ajouter une nouvelle ligne
+
+✅ 3. Champ “Valeur de base (VE ou VT)”
+
+Label : Valeur de l’opération
+
+Input numérique
+
+Sélecteur VE ou VT (affecte la base du calcul)
+
+✅ 4. Champ “Pondération pipeline (%)”
+
+Label : Pondération pipeline (%)
+
+Input de 0 à 100
+
+Sert à calculer une valeur pondérée de la VE ou VT
+
+✅ 5. Bloc de calcul automatique (simulateur de fees)
+Affiche en live :
+
+Valeur pondérée : VE/VT * (pondération / 100)
+
+Total des fees estimés =
+retainer (si coché) + flat fee (si coché) +
+(successFee% * valeur pondérée) +
+pour chaque accélérateur :
+si VE/VT > seuil, ajouter (accélérateur% * VE/VT)
+
+Affiche ce résultat dans un bloc clair, avec explication de la formule.
+
+✅ 6. Protection côté backend
+Assure-toi que les champs sensibles (retainer, successFee, pipeline, etc.) ne peuvent être modifiés que par un admin dans l’API. Si besoin :
+
+js
+Copier
+Modifier
+if (!req.user.isAdmin) {
+  return res.status(403).json({ message: "Accès réservé aux administrateurs" });
+}
+Merci de me générer tout le code React nécessaire pour ce formulaire + validation, ainsi que la mise à jour côté backend (Express ou autre).

@@ -1,0 +1,137 @@
+**💡 Replit Prompt Complet — Module Roadshow (AmaTech)**
+
+Nous développons un **module Roadshow** pour un outil interne de banque d'investissement, utilisé dans le cadre de projets M&A. Chaque ligne représente une contrepartie. Il ne s'agit pas d'un Kanban, mais d'une **tableau tabulaire**.
+
+Le module doit comporter les éléments suivants :
+
+---
+
+## 📊 Fonctionnalités attendues
+
+Chaque ligne affiche les colonnes suivantes :
+
+1. **Statut** de la contrepartie :
+   - Live (en vert)
+   - En attente de retour (gris clair)
+   - No-go (gris foncé)
+   - Le tri par défaut affiche : Live > Waiting > No-go
+
+2. **Nom de la contrepartie**
+3. **Owner** : un membre de l'équipe projet (relié à la table user)
+4. **Contact de la contrepartie** : nom, prénom, email
+5. **Suivi des interactions** :
+   - Affiche la dernière interaction (texte + date)
+   - Clic pour afficher l'historique + ajouter une note (très simple)
+6. **Teaser** : date ou vide
+7. **Relance** :
+   - Date de la dernière relance
+   - Possibilité d'en ajouter plusieurs (relance #1, #2...)
+   - Affiche la dernière, clic pour voir tout
+8. **Prochaine relance** :
+   - Générée automatiquement (+5j de la dernière relance)
+   - Modifiable
+   - Doit être stockée pour apparaître dans la to-do du owner
+9. **NDA / IM / BP** : date ou vide
+10. **Envois complémentaires** : multiples dates (affiche la dernière, clic pour voir tout)
+11. **Meetings** : multiples dates (affiche la dernière, clic pour voir tout)
+12. **IOI** : date ou vide
+13. **Phase 2** : booléen (ok / pas ok)
+14. Si Phase 2 ok :
+    - **Dataroom** : date ou vide
+    - **Binding Offer** : date ou vide
+
+---
+
+## 📊 Données à persister (PostgreSQL via Drizzle ORM)
+
+### `roadshow_counterparty`
+```ts
+id               serial primary key
+project_id       uuid references project(id)
+name             text not null
+status           enum('Live', 'Waiting', 'No-go') default 'Waiting'
+owner_id         uuid references user(id)
+created_at       timestamp default now()
+updated_at       timestamp default now()
+```
+
+### `roadshow_contact`
+```ts
+id               serial primary key
+counterparty_id  integer references roadshow_counterparty(id)
+full_name        text
+email            text
+```
+
+### `roadshow_event`
+```ts
+id               serial primary key
+counterparty_id  integer references roadshow_counterparty(id)
+type             enum('interaction', 'teaser', 'followup', 'nda', 'im', 'bp', 'extra_send', 'meeting', 'ioi', 'dataroom', 'binding')
+label            text  -- ex: "Relance #2"
+content          text  -- notes libres
+event_date       date not null
+created_by       uuid references user(id)
+created_at       timestamp default now()
+```
+
+### `roadshow_phase2`
+```ts
+id               serial primary key
+counterparty_id  integer references roadshow_counterparty(id)
+phase2_ok        boolean default false
+dataroom_sent_at date
+binding_offer_at date
+```
+
+---
+
+## 🚀 Backend Express.js (Node.js)
+
+Endpoints à implémenter :
+```ts
+GET    /projects/:id/roadshow
+POST   /projects/:id/roadshow
+PATCH  /roadshow/:counterpartyId
+POST   /roadshow/:counterpartyId/contact
+POST   /roadshow/:counterpartyId/event
+GET    /roadshow/:counterpartyId/events
+```
+
+> Tous les endpoints doivent être reliés à Drizzle et vérifier que les données sont persistées proprement. Utiliser `zod` pour valider les entrées.
+
+---
+
+## 🖌️ Frontend React + Tailwind
+
+1. **Table principale**
+   - Table triée par statut
+   - Colonne statut avec pastille de couleur
+   - Colonne "owner" avec autocomplétion
+   - Colonne "dernière interaction" (clic pour historique + ajout)
+   - Colonne relance, prochaine relance (modifiables)
+   - Colonne NDA / IM / BP avec date picker inline
+   - Affichage conditionnel des colonnes Phase 2 si `phase2_ok = true`
+
+2. **Drawer ou Modale par contrepartie**
+   - Formulaire pour modifier tous les champs
+   - Historique complet des événements
+   - Possibilité d'ajouter un événement (teaser, meeting, etc.)
+
+---
+
+## 📅 Générateur de Résumés Hebdo (ex : Semaine 51)
+
+- Endpoint : `GET /projects/:id/roadshow/summary?week=51`
+- Génère une synthèse comme :
+```text
+Résumé Semaine 51 :
+- Envoi d’un IM à XXX, XXX, XXX
+- Envoi d’un teaser à XX, XX
+- 3 relances effectuées : Groupe F, Skymagic...
+```
+- Utilisé dans le module Documents > Toolbox > Générateur de process update
+
+---
+
+✅ Merci de tout développer dans un esprit robuste, clair et sobre, orienté UX banque d’investissement. Pas de wording ludique, pas de gimmicks. Priorité à la performance, lisibilité, et solidité de la persistance des données.

@@ -1,0 +1,83 @@
+Objectif :
+Corriger les comportements de la vue Roadshow pour assurer une UX fluide, fiable et professionnelle.
+
+🛠️ 1. Interactions : compteur dynamique
+Problème : le nombre d’interactions ne se met à jour qu’après reload complet de la page.
+
+À faire :
+
+Lorsque l'utilisateur ajoute une nouvelle interaction (roadshow_event de type interaction), mettre à jour localement le compteur (en front, sans reload)
+
+Solution : stocker un interactionCount dans le useState ou Zustand, et l’incrémenter après POST réussi
+
+Ou re-fetch les événements de cette contrepartie avec await mutate() ou refetch() si tu utilises SWR / React Query
+
+🛠️ 2. Teaser / NDA / IM / BP : UX de modification
+Problème : les champs ne donnent pas d’indication qu’ils sont modifiables après ajout ; pas de feedback utilisateur.
+
+À faire :
+
+Lorsqu’une date est saisie, afficher le champ en lecture seule (ex: 01/07/2025) avec une icône ✏️ ou bouton “modifier”
+
+Clic sur ✏️ → repasse en mode date picker
+
+Enregistrer via fetch (POST roadshow_event) et afficher un toast.success("Teaser enregistré")
+
+Amélioration UX :
+
+tsx
+Copier
+Modifier
+{!editMode ? (
+  <div className="flex items-center gap-2">
+    <span>{format(date)}</span>
+    <button onClick={() => setEditMode(true)}><EditIcon /></button>
+  </div>
+) : (
+  <input type="date" value={...} onChange={...} />
+)}
+🛠️ 3. Phase 2 : toggle non fonctionnel
+Problème : cocher la case “Phase 2” ne déclenche rien.
+
+À faire :
+
+Ajouter une fonction handleTogglePhase2(counterpartyId) :
+
+ts
+Copier
+Modifier
+const handleTogglePhase2 = async (checked: boolean) => {
+  const res = await fetch(`/api/roadshow/${id}/phase2`, {
+    method: "POST",
+    body: JSON.stringify({ phase2_ok: checked }),
+    headers: { "Content-Type": "application/json" },
+  });
+  if (res.ok) {
+    toast.success("Phase 2 mise à jour");
+    refresh();
+  }
+};
+Et côté backend :
+
+ts
+Copier
+Modifier
+app.post("/api/roadshow/:id/phase2", async (req, res) => {
+  const counterpartyId = parseInt(req.params.id);
+  const { phase2_ok } = req.body;
+
+  await db
+    .insert(roadshow_phase2)
+    .values({ counterparty_id: counterpartyId, phase2_ok })
+    .onConflictDoUpdate({
+      target: roadshow_phase2.counterparty_id,
+      set: { phase2_ok },
+    });
+
+  res.status(200).json({ success: true });
+});
+✅ Résumé
+Élément	À corriger / améliorer
+Interactions	Compteur live (pas reload page)
+Teaser/NDA…	UX : affichage readonly + ✏️
+Phase 2	Sauvegarde backend + affichage dataroom/binding si activé

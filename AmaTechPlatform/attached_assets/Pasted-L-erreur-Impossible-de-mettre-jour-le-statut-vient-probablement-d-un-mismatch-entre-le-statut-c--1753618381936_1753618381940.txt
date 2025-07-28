@@ -1,0 +1,67 @@
+L’erreur "Impossible de mettre à jour le statut" vient probablement d’un mismatch entre le statut côté React ("Live", "En attente", "No-go") et la valeur enregistrée dans la base (probablement "Waiting", "Live", "No-go" — ou encore d’un casing ou espace mal formaté).
+
+✅ Étapes pour corriger proprement
+1. 🔎 Vérifie les valeurs réellement enregistrées en base dans la colonne statut de roadshow_counterparty.
+Exécute une requête directe :
+
+sql
+Copier
+Modifier
+SELECT DISTINCT statut FROM roadshow_counterparty;
+Cela va te montrer si tu as "Waiting" au lieu de "En attente", ou "live" au lieu de "Live", etc.
+
+2. 🔁 Corrige le if dans le POST /:counterpartyId/status backend :
+Actuel :
+
+ts
+Copier
+Modifier
+if (!['Live', 'En attente', 'No-go'].includes(newStatus)) {
+Corrigé avec normalisation simple :
+
+ts
+Copier
+Modifier
+const validStatuses = {
+  live: 'Live',
+  attente: 'En attente',
+  nogo: 'No-go',
+  'no-go': 'No-go',
+};
+
+const key = newStatus.trim().toLowerCase().replace(/\s+/g, '').replace('-', '');
+const formattedStatus = validStatuses[key];
+
+if (!formattedStatus) {
+  return res.status(400).json({ error: 'Statut invalide' });
+}
+
+// update statut
+await db.update(roadshow_counterparty)
+  .set({ statut: formattedStatus })
+  .where(eq(roadshow_counterparty.id, parseInt(counterpartyId)));
+
+// event log
+await db.insert(roadshow_event).values({
+  counterparty_id: parseInt(counterpartyId),
+  type: 'status_change',
+  date: new Date(),
+  meta: { newStatus: formattedStatus },
+});
+
+res.json({ success: true });
+3. 🔄 Côté Frontend : assure-toi que le newStatus envoyé est bien "Live", "En attente" ou "No-go"
+Si tu passes les labels depuis un Select, fais bien attention à la value. Exemple :
+
+tsx
+Copier
+Modifier
+<Select
+  value={statut}
+  onValueChange={(value) => handleStatusChange(value)}
+>
+  <SelectItem value="Live">🟢 Live</SelectItem>
+  <SelectItem value="En attente">🟡 En attente</SelectItem>
+  <SelectItem value="No-go">🔴 No-go</SelectItem>
+</Select>
+✅ Bonus : ajoute un console.log(newStatus) dans handleStatusChange pour vérifier le format transmis.

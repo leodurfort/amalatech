@@ -1,0 +1,79 @@
+Affichage & persistance de la Relance programmée
+python
+Copier
+Modifier
+🎯 CONTEXTE
+Dans le module Roadshow, lorsqu'on programme une relance via la modale (cf. screenshot), l'information est bien stockée en tant qu’événement `followup`.  
+Mais **la date de prochaine relance (relance programmée)** a disparu du tableau principal. On veut la **réafficher, la stocker, et la réutiliser ailleurs (to-do list)**.
+
+---
+
+### ✅ Objectif
+
+#### 1. 🔢 Calcul automatique
+Au moment de la création d’une relance (`roadshow_event` type `followup`) :
+- Calculer la date `relance_programmee` = **date relance + 5 jours**
+- Stocker cette info dans la table `roadshow_counterparty.next_followup_date`
+
+⚠️ Si plusieurs relances existent : on stocke la **plus proche** dans le futur (min).
+
+#### 2. 🧱 Backend — Drizzle
+
+```ts
+// roadshow_counterparty.ts
+next_followup_date: pg.date("next_followup_date")
+Lors d’un INSERT ou DELETE d’un event de type followup, déclencher un recalcul automatique côté backend, exemple :
+
+ts
+Copier
+Modifier
+await db
+  .select({ date: roadshowEvent.date })
+  .from(roadshowEvent)
+  .where(and(
+    eq(roadshowEvent.counterpartyId, counterpartyId),
+    eq(roadshowEvent.type, 'followup'),
+    gte(roadshowEvent.date, today)
+  ))
+  .orderBy(roadshowEvent.date)
+  .limit(1)
+
+await db
+  .update(roadshowCounterparty)
+  .set({ nextFollowupDate: found?.date ?? null })
+  .where(eq(roadshowCounterparty.id, counterpartyId))
+3. 📊 Frontend
+a. Colonne “Relance prog.”
+Titre : Relance prog.
+
+Format : 📅 jj/mm/aaaa
+
+Affiche la valeur de next_followup_date
+
+Si null → affiche “–”
+
+b. Affichage à part (plus tard)
+Cette donnée sera utilisée dans :
+
+L’onglet To-do List
+
+Les alertes mail
+
+🔁 Endpoints concernés :
+POST /roadshow/events (type = followup)
+
+Doit mettre à jour automatiquement next_followup_date après insertion
+
+DELETE /roadshow/events/:id
+
+Doit recalculer et MAJ next_followup_date si l’event supprimé était un followup
+
+✅ UX :
+
+Lorsque je programme une relance → affichée dans la colonne Relance prog.
+
+La colonne est en lecture seule
+
+Lorsqu’on supprime une relance → mise à jour immédiate de la colonne
+
+🧱 Stack : React (frontend) – Node.js + Drizzle (backend) – PostgreSQL (base).

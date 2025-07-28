@@ -1,0 +1,98 @@
+ Objectif :
+Quand je clique sur le bouton Ajouter dans la modale “Gestion des contacts”, le contact doit être enregistré en base via une route backend, et la modale doit se fermer avec un toast de confirmation.
+
+💻 Frontend React (extrait du composant ContactModal.tsx)
+tsx
+Copier
+Modifier
+import { useState } from "react";
+import toast from "react-hot-toast";
+
+export default function ContactModal({ counterpartyId, closeModal, refresh }) {
+  const [prenom, setPrenom] = useState("");
+  const [nom, setNom] = useState("");
+  const [email, setEmail] = useState("");
+
+  const handleAddContact = async () => {
+    if (!prenom || !nom || !email) {
+      toast.error("Tous les champs sont requis");
+      return;
+    }
+
+    const res = await fetch(`/api/roadshow/${counterpartyId}/contact`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        full_name: `${prenom} ${nom}`,
+        email,
+      }),
+    });
+
+    if (res.ok) {
+      toast.success("Contact ajouté !");
+      closeModal();  // Ferme la modale
+      refresh();     // Recharge les données dans le tableau
+    } else {
+      toast.error("Erreur lors de l'ajout");
+    }
+  };
+
+  return (
+    <div className="p-4 space-y-3">
+      <h2 className="text-lg font-semibold">Ajouter un contact</h2>
+      <div className="flex gap-2">
+        <input
+          placeholder="Prénom"
+          value={prenom}
+          onChange={e => setPrenom(e.target.value)}
+          className="input input-bordered w-1/2"
+        />
+        <input
+          placeholder="Nom"
+          value={nom}
+          onChange={e => setNom(e.target.value)}
+          className="input input-bordered w-1/2"
+        />
+      </div>
+      <input
+        placeholder="Email"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        className="input input-bordered w-full"
+      />
+      <div className="flex justify-end gap-2 mt-4">
+        <button onClick={closeModal} className="btn btn-outline">Fermer</button>
+        <button onClick={handleAddContact} className="btn btn-primary">Ajouter</button>
+      </div>
+    </div>
+  );
+}
+🔧 Backend Node.js + Drizzle (route à ajouter dans roadshow.routes.ts)
+ts
+Copier
+Modifier
+app.post("/api/roadshow/:id/contact", async (req, res) => {
+  const counterpartyId = parseInt(req.params.id);
+  const { full_name, email } = req.body;
+
+  if (!full_name || !email) return res.status(400).json({ error: "Missing fields" });
+
+  await db.insert(roadshow_contact).values({
+    counterparty_id: counterpartyId,
+    full_name,
+    email,
+  });
+
+  res.status(200).json({ success: true });
+});
+🧱 Table Drizzle correspondante (roadshow_contact.ts)
+ts
+Copier
+Modifier
+export const roadshow_contact = pgTable("roadshow_contact", {
+  id: serial("id").primaryKey(),
+  counterparty_id: integer("counterparty_id").references(() => roadshow_counterparty.id),
+  full_name: text("full_name"),
+  email: text("email"),
+});
+Tu peux tester directement ce flux avec un console.log() dans le backend ou via un toast.success("Contact ajouté").

@@ -1,0 +1,84 @@
+HomePage.tsx – version complète (React + Tailwind)
+tsx
+Copier
+Modifier
+import React from "react";
+
+export default function HomePage() {
+  return (
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center px-4">
+      {/* Logo */}
+      <img
+        src="/assets/logo-amala-bleu.png"
+        alt="Logo Amala Partners"
+        className="h-12 mb-6"
+      />
+
+      {/* Titre & sous-titre */}
+      <h1 className="text-4xl font-bold text-center text-[#0e355c]">AmaTech</h1>
+      <p className="mt-4 text-center text-gray-600 text-lg max-w-xl">
+        Espace de travail confidentiel dédié à la gestion des mandats d’Amala Partners.
+      </p>
+
+      {/* Bouton de connexion */}
+      <div className="mt-6">
+        <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded">
+          Accéder à la plateforme
+        </button>
+      </div>
+
+      {/* Cartes modules */}
+      <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
+        {/* Carte 1 */}
+        <div className="bg-white shadow-md rounded-lg p-6 text-center border">
+          <h2 className="text-lg font-semibold text-blue-800">Gestion des Dossiers</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Accédez à l’ensemble des mandats en cours et naviguez dans un espace structuré par dossier.
+          </p>
+        </div>
+
+        {/* Carte 2 */}
+        <div className="bg-white shadow-md rounded-lg p-6 text-center border">
+          <h2 className="text-lg font-semibold text-green-700">Suivi Roadshow</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Visualisez l’état des échanges avec les contreparties et pilotez les relances.
+          </p>
+        </div>
+
+        {/* Carte 3 */}
+        <div className="bg-white shadow-md rounded-lg p-6 text-center border">
+          <h2 className="text-lg font-semibold text-purple-700">CRM Interne</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Centralisez les contacts, suivez les interactions et facilitez le travail d’équipe.
+          </p>
+        </div>
+      </div>
+
+      {/* Mention légale */}
+      <p className="text-xs text-center text-gray-500 mt-12 max-w-2xl px-4">
+        L'accès à cette plateforme est strictement réservé aux employés d’Amala Partners.
+        Tout accès non autorisé fera l’objet de poursuites conformément aux dispositions légales en vigueur.
+      </p>
+
+      {/* Footer */}
+      <p className="text-xs text-center text-gray-400 mt-4 mb-4">
+        © {new Date().getFullYear()} Amala Partners. Plateforme interne confidentielle.
+      </p>
+    </div>
+  );
+}
+✅ À faire côté assets
+Place logo-amala-bleu.png dans public/assets/ ou accessible via /assets/logo-amala-bleu.png
+
+Si tu veux l'intégrer ailleurs, ajuste le chemin src="/assets/logo-amala-bleu.png"
+
+✨ Résultat visuel attendu
+Interface centrée, claire, sobre
+
+3 blocs fonctionnels bien visibles
+
+Logo d’Amala en tête
+
+Mention de sécurité en bas, discrète mais explicite
+
+Parfait pour une landing page d’outil interne professionnel

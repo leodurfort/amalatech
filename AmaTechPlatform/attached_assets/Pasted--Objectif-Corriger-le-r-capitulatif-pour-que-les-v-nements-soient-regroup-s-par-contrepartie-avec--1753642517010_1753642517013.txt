@@ -1,0 +1,99 @@
+ Objectif
+Corriger le récapitulatif pour que les événements soient regroupés par contrepartie, avec un affichage clair et lisible.
+
+1. 🧱 Backend — Express + Drizzle
+✅ Étendre le GET /projects/:id/roadshow/summary?week=30&year=2025 :
+Assure-toi d'inclure le nom de la contrepartie :
+
+ts
+Copier
+Modifier
+const events = await db
+  .select({
+    counterpartyId: roadshow_event.counterparty_id,
+    counterpartyName: roadshow_counterparty.name, // Important
+    type: roadshow_event.type,
+    date: roadshow_event.date,
+    meta: roadshow_event.meta,
+  })
+  .from(roadshow_event)
+  .leftJoin(roadshow_counterparty, eq(roadshow_event.counterparty_id, roadshow_counterparty.id))
+  .where(
+    and(
+      eq(roadshow_counterparty.project_id, projectId),
+      between(roadshow_event.date, startOfWeek, endOfWeek)
+    )
+  );
+🟢 Assure-toi que roadshow_counterparty.name existe bien. Utilise alias si besoin.
+
+2. 🖥️ Frontend — Groupement et affichage React
+✅ Regroupement par nom
+ts
+Copier
+Modifier
+const grouped = useMemo(() => {
+  const result = {};
+  events?.forEach((event) => {
+    const name = event.counterpartyName || "Contrepartie inconnue";
+    if (!result[name]) result[name] = [];
+    result[name].push(event);
+  });
+  return result;
+}, [events]);
+✅ Formatage des événements
+ts
+Copier
+Modifier
+const formatEvent = (event) => {
+  const dateStr = dayjs(event.date).format("DD/MM");
+  switch (event.type) {
+    case "interaction":
+      return `${dateStr} — Interaction`;
+    case "followup":
+      return `${dateStr} — Relance`;
+    case "teaser":
+      return `${dateStr} — Envoi teaser`;
+    case "nda":
+      return `${dateStr} — NDA envoyé`;
+    case "im":
+      return `${dateStr} — IM envoyé`;
+    case "bp":
+      return `${dateStr} — BP envoyé`;
+    case "ioi":
+      return `${dateStr} — IOI reçue`;
+    case "meeting":
+      return `${dateStr} — Réunion prévue`;
+    case "extra_send":
+      return `${dateStr} — Envoi complémentaire`;
+    case "status_change":
+      return `${dateStr} — Statut changé → ${event.meta?.newStatus ?? "N/A"}`;
+    default:
+      return `${dateStr} — ${event.type}`;
+  }
+};
+✅ Rendu final
+tsx
+Copier
+Modifier
+<div className="space-y-6 mt-6">
+  {Object.entries(grouped).map(([name, events]) => (
+    <div key={name} className="border p-4 rounded bg-muted/10">
+      <h3 className="text-sm font-semibold text-muted-foreground mb-2">
+        {name} — {events.length} événement{events.length > 1 ? 's' : ''}
+      </h3>
+      <ul className="list-disc ml-6 text-sm space-y-1">
+        {events
+          .sort((a, b) => new Date(a.date) - new Date(b.date))
+          .map((e, i) => (
+            <li key={i}>{formatEvent(e)}</li>
+          ))}
+      </ul>
+    </div>
+  ))}
+</div>
+🧪 Vérifications
+✅ La requête backend retourne bien counterpartyName
+
+✅ Les événements sont triés dans chaque bloc
+
+✅ Les statuts changés, relances, IOI, teaser etc. apparaissent bien

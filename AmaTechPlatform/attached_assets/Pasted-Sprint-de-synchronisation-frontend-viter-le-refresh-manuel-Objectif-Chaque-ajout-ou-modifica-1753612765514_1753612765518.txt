@@ -1,0 +1,73 @@
+Sprint de synchronisation frontend (éviter le “refresh manuel”)
+🎯 Objectif
+Chaque ajout ou modification (interaction, date teaser/NDA/IM/BP, etc.) doit immédiatement mettre à jour l’interface, sans besoin de changer de page ni de recharger.
+
+🧠 Cause technique
+Tu fais un POST vers le backend (✅)
+
+Le backend sauvegarde bien les données (✅)
+
+Mais tu n’actualises pas le state local qui drive l’interface (❌)
+
+🔧 Solution générale
+Option A – Utilise SWR ou React Query
+Si tu utilises SWR :
+
+ts
+Copier
+Modifier
+const { data, mutate } = useSWR(`/api/roadshow/${projectId}/data`);
+→ Après un fetch réussi :
+
+ts
+Copier
+Modifier
+await mutate(); // recharge les données côté client
+Option B – Mets à jour localement le state
+Si tu utilises useState, fais :
+
+ts
+Copier
+Modifier
+setInteractionCount(prev => prev + 1);
+Ou dans un objet :
+
+ts
+Copier
+Modifier
+setRowData(prev => ({
+  ...prev,
+  [counterpartyId]: {
+    ...prev[counterpartyId],
+    nda: newDate
+  }
+}));
+✅ À appliquer aux composants suivants :
+Action	Composant	Ce qu’il faut faire
+Ajouter une interaction	Drawer 💬	await fetch(), puis mutate() ou setCount()
+Ajouter Teaser / NDA...	Colonne date	await fetch() + mise à jour locale de la date
+Meetings	idem relance	Ajouter au state local, ou mutate()
+Phase 2 Toggle	case à cocher	Mise à jour locale du phase2_ok
+
+✏️ Exemple React concret (modèle simple)
+tsx
+Copier
+Modifier
+const [teaserDate, setTeaserDate] = useState<string | null>(existingDate);
+
+const handleTeaserSave = async (newDate: string) => {
+  const res = await fetch(`/api/roadshow/${id}/event`, {
+    method: "POST",
+    body: JSON.stringify({ type: "teaser", event_date: newDate }),
+    headers: { "Content-Type": "application/json" },
+  });
+
+  if (res.ok) {
+    toast.success("Teaser enregistré");
+    setTeaserDate(newDate); // met à jour directement l'affichage
+  }
+};
+🎯 Résultat attendu
+Je clique sur “+ Ajouter” → je choisis une date → elle s'affiche directement.
+
+J’ajoute une interaction → le compteur passe de “×2” à “×3” instantanément.

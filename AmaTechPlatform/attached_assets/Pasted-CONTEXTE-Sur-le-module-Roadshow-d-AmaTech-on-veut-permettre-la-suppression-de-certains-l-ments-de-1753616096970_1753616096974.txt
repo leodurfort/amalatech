@@ -1,0 +1,58 @@
+CONTEXTE
+Sur le module Roadshow d’AmaTech, on veut permettre la suppression de certains éléments depuis leurs modales respectives, et ajouter la colonne IOI dans le tableau.
+
+---
+
+### ✅ Objectifs précis :
+
+#### 1. 🔥 Suppression dans les modales
+✅ Ajouter un bouton 🗑 "Supprimer" pour chaque élément dans les composants suivants :
+
+- **Modale des contacts**  
+  → Permet de supprimer un contact (ligne prénom/nom/email) → DELETE `/roadshow/contacts/:id`
+
+- **Modale des interactions**  
+  → Supprimer une note/interaction (via `roadshow_event` type `interaction`)  
+  → DELETE `/roadshow/events/:id`
+
+- **Modale des meetings**  
+  → Supprimer un meeting (`roadshow_event` type `meeting`)  
+  → DELETE `/roadshow/events/:id`
+
+- **Modale des relances**  
+  → Supprimer une relance (`roadshow_event` type `followup`)  
+  → DELETE `/roadshow/events/:id`
+
+> Toutes les suppressions doivent :
+> - Déclencher un `toast.success("Élément supprimé")`
+> - Rafraîchir les données immédiatement (refetch ou mutation cache)
+> - Mettre à jour les compteurs (interactions, meetings…) si concerné
+
+---
+
+#### 2. 📅 Ajouter une colonne "IOI"
+✅ Nouvelle colonne après **Relances**, identique à Teaser/NDA :
+
+- Format : inline date picker
+- Label : **IOI**
+- Validation par `Enter` ou ✏️ bouton
+- Enregistrement dans `roadshow_event` avec :
+  ```ts
+  type = 'ioi'
+  counterparty_id = [id de la ligne]
+  date = [valeur saisie]
+Bonus UX : icône ✏️ si une date IOI existe déjà, sinon "+ Ajouter"
+
+🧱 Backend attendu (si pas déjà fait) :
+Table roadshow_event :
+
+type: enum('interaction', 'teaser', 'followup', 'nda', 'im', 'bp', 'ioi', 'extra_send', 'meeting', 'dataroom', 'binding')
+
+Endpoint :
+
+DELETE /roadshow/events/:id
+
+DELETE /roadshow/contacts/:id
+
+🛠️ Stack Replit : React (frontend), Node.js + Drizzle (backend), PostgreSQL.
+🎯 Objectif : corriger le module Roadshow pour rendre toutes les modales pleinement fonctionnelles (CRUD complet) + afficher IOI comme jalon de process.

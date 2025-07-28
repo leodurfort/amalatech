@@ -1,0 +1,103 @@
+**💡 Replit Prompt Sprint Suivant — Module Roadshow (AmaTech)**
+
+Nous poursuivons le développement du module Roadshow sur la base du prompt initial déjà en place. Ce sprint se concentre sur **l’enrichissement fonctionnel de la vue tabulaire**.
+
+---
+
+## ✅ Objectifs de ce sprint (complément du module déjà en place)
+
+### 1. 📇 Ajout / édition de contact contrepartie
+- Affichage d’une icône ✉️ (déjà présente)
+- Clic ouvre une **modale** ou champ inline :
+  - Prénom, Nom, Email
+  - Enregistrement dans la table `roadshow_contact`
+
+### 2. 📝 Suivi des interactions (notes)
+- Colonne "Dernière interaction" : affiche la dernière note + date
+- Clic → **Drawer** avec :
+  - Historique chronologique
+  - Champ de saisie pour ajouter une note avec date
+  - Sauvegarde dans `roadshow_event` type = `interaction`
+
+### 3. 📤 Teaser
+- Colonne avec **input date inline**
+- Création d’un événement `teaser` dans `roadshow_event`
+- On ne gère qu’un seul teaser par contrepartie (loggé mais pas multi)
+
+### 4. 🔁 Relances (multiples)
+- Affiche la **dernière relance (#n)** avec date
+- Clic ouvre modale avec historique
+- Possibilité d’ajouter une nouvelle relance (label automatique : Relance #1, #2, etc.)
+- Événement `followup` dans `roadshow_event`
+
+### 5. 📆 Prochaine relance
+- Calculée automatiquement = `last followup + 5j`
+- Editable (date picker inline)
+- Enregistrée dans `roadshow_counterparty.next_followup_date`
+- Apparaitra dans la To-do list du `owner`
+
+### 6. 📁 Dates séparées pour : NDA / IM / BP
+- Trois colonnes distinctes avec **date pickers inline**
+- Chaque changement crée un `roadshow_event` avec type correspondant
+
+### 7. 📨 Envois complémentaires & Meetings (multiples)
+- Comme relances : afficher dernière date, clic pour historique + ajout
+- Stockés dans `roadshow_event` avec type `extra_send` ou `meeting`
+
+### 8. 🚩 Phase 2 + Dataroom / Binding Offer
+- Colonne "Phase 2" = toggle (booléen)
+- Si true, affichage de 2 champs supplémentaires (date pickers) :
+  - Dataroom envoyée (`dataroom_sent_at`)
+  - Offre binding (`binding_offer_at`)
+- Stockés dans `roadshow_phase2`
+
+### 9. 📊 Résumé hebdo (génération automatique)
+- Endpoint REST : `GET /projects/:id/roadshow/summary?week=30`
+- Backend regroupe les `roadshow_event` de la semaine par type
+- Frontend affiche synthèse comme :
+```text
+Résumé Semaine 30 :
+- Envoi d’un teaser à A, B
+- Envoi d’un NDA à A, C
+- 2 relances effectuées (B, C)
+```
+
+---
+
+## 🧱 Backend / Drizzle : Compléments
+
+### Table `roadshow_counterparty`
+```ts
+next_followup_date date
+```
+
+### Table `roadshow_event` (type étendu)
+```ts
+type: enum('interaction', 'teaser', 'followup', 'nda', 'im', 'bp', 'extra_send', 'meeting', 'ioi', 'dataroom', 'binding')
+```
+
+### Table `roadshow_phase2` (inchangée si déjà créée)
+```ts
+phase2_ok boolean
+dataroom_sent_at date
+binding_offer_at date
+```
+
+---
+
+## 🖥️ Frontend React : Comportements à implémenter
+
+| Colonne             | Type        | UX                                              |
+|---------------------|-------------|--------------------------------------------------|
+| Contact              | Click        | Modale pour ajouter/modifier nom + email         |
+| Dernière interaction | Click        | Drawer historique + ajout note                  |
+| Teaser               | Date picker | Inline                                           |
+| Relance              | Date picker | Dernière relance affichée, clic → modale        |
+| Prochaine relance    | Date picker | Calculée, editable, liée à to-do du owner        |
+| NDA / IM / BP        | Date picker | Champs séparés, inline                          |
+| Meetings / Compléments | Date picker | Dernier + clic pour historique + ajout         |
+| Phase 2              | Toggle      | Si true → dataroom + binding offer              |
+
+---
+
+🎯 L’objectif est de finaliser une **vue Roadshow complète et vivante**, reflétant fidèlement l’activité des contreparties, avec historique, résumé hebdo, et logique M&A simple mais complète.

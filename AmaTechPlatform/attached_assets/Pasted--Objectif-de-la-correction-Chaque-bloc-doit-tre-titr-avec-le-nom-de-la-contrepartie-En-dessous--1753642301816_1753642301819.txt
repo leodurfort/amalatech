@@ -1,0 +1,80 @@
+✅ Objectif de la correction
+Chaque bloc doit être titré avec le nom de la contrepartie
+
+En-dessous, une liste chronologique des événements de la semaine, bien formatée
+
+Supprimer le bloc undefined qui vient du nom manquant ou mal récupéré
+
+🧠 Étapes à corriger côté frontend
+1. Corriger le regroupement par counterparty_name
+❌ Actuel (problématique) :
+Tu fais sûrement un grouped[event.name], or event.name est mal nommé ou undefined
+
+✅ Correctif :
+Dans le regroupement, utiliser un champ explicite récupéré depuis l’API : counterpartyName
+(Mets à jour la requête SQL si besoin pour renommer la colonne)
+
+ts
+Copier
+Modifier
+const grouped = useMemo(() => {
+  const byCounterparty = {};
+  data?.events?.forEach((e) => {
+    const name = e.counterpartyName || "Contrepartie inconnue";
+    if (!byCounterparty[name]) byCounterparty[name] = [];
+    byCounterparty[name].push(formatEvent(e));
+  });
+  return byCounterparty;
+}, [data]);
+2. Renommer la colonne dans ton backend
+Dans ton routeur Express, modifie ceci pour que le champ de jointure soit bien lisible :
+
+ts
+Copier
+Modifier
+const events = await db
+  .select({
+    counterpartyId: roadshow_event.counterparty_id,
+    counterpartyName: roadshow_counterparty.name,
+    type: roadshow_event.type,
+    date: roadshow_event.date,
+    meta: roadshow_event.meta,
+  })
+✅ Le frontend pourra alors faire event.counterpartyName
+
+3. (Optionnel) Trier les événements par date croissante
+Juste avant l’affichage :
+
+ts
+Copier
+Modifier
+byCounterparty[name].sort((a, b) => new Date(a.date) - new Date(b.date));
+4. Composant d’affichage amélioré
+tsx
+Copier
+Modifier
+return (
+  <div className="space-y-6 mt-6">
+    {Object.entries(grouped).map(([name, events]) => (
+      <div key={name} className="border p-4 rounded bg-muted/10">
+        <h3 className="text-sm font-semibold text-muted-foreground mb-2">
+          {name} — {events.length} événement{events.length > 1 ? 's' : ''}
+        </h3>
+        <ul className="list-disc ml-6 text-sm space-y-1">
+          {events.map((e, i) => (
+            <li key={i}>{e}</li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </div>
+);
+✨ Résultat attendu
+Plus de undefined
+
+Un bloc par contrepartie
+
+Chaque bloc commence par un titre clair (ex : Tescc — 6 événements)
+
+Événements triés et affichés proprement
+

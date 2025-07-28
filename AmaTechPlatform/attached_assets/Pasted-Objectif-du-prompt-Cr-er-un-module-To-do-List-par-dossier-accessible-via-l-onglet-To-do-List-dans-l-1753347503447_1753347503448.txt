@@ -1,0 +1,126 @@
+Objectif du prompt
+Créer un module To-do List par dossier, accessible via l’onglet To-do List dans le menu latéral.
+Il s’agit de gérer des tâches internes associées à ce mandat M&A spécifique, avec une interface simple et efficace.
+
+🔧 Prompt Replit
+tsx
+Copier
+Modifier
+// 📁 ToDoList.tsx (React component for a per-project task list)
+// Tech: React + Tailwind CSS + Zustand for state management (or Firebase for storage)
+
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar } from "@/components/ui/calendar";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
+interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  dueDate?: string;
+  assignedTo?: string;
+  done: boolean;
+}
+
+export default function ToDoList({ projectId }) {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [newTask, setNewTask] = useState("");
+  const [dueDate, setDueDate] = useState<string | null>(null);
+  const [assignedTo, setAssignedTo] = useState("");
+
+  function addTask() {
+    if (!newTask) return;
+    const task: Task = {
+      id: crypto.randomUUID(),
+      title: newTask,
+      dueDate: dueDate ?? undefined,
+      assignedTo,
+      done: false,
+    };
+    setTasks([...tasks, task]);
+    setNewTask("");
+    setDueDate(null);
+    setAssignedTo("");
+  }
+
+  function toggleDone(id: string) {
+    setTasks(
+      tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
+    );
+  }
+
+  function removeTask(id: string) {
+    setTasks(tasks.filter((t) => t.id !== id));
+  }
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xl font-semibold">To-do List</h2>
+
+      <div className="flex flex-col gap-2 border rounded-lg p-4 bg-muted">
+        <Input
+          placeholder="Nouvelle tâche…"
+          value={newTask}
+          onChange={(e) => setNewTask(e.target.value)}
+        />
+        <div className="flex gap-4">
+          <Calendar
+            mode="single"
+            selected={dueDate ? new Date(dueDate) : undefined}
+            onSelect={(date) => setDueDate(date?.toISOString().split("T")[0] ?? null)}
+          />
+          <Input
+            placeholder="Attribuer à…"
+            value={assignedTo}
+            onChange={(e) => setAssignedTo(e.target.value)}
+          />
+          <Button onClick={addTask}>Ajouter</Button>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {tasks.map((task) => (
+          <div key={task.id} className="flex items-start justify-between border p-3 rounded-md bg-white shadow-sm">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                checked={task.done}
+                onCheckedChange={() => toggleDone(task.id)}
+              />
+              <div>
+                <div className="font-medium">{task.title}</div>
+                <div className="text-sm text-muted-foreground">
+                  {task.dueDate && `Échéance : ${task.dueDate} `} 
+                  {task.assignedTo && `· Assigné à : ${task.assignedTo}`}
+                </div>
+              </div>
+            </div>
+            <Button variant="ghost" onClick={() => removeTask(task.id)}>
+              Supprimer
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+🧩 Stockage (optionnel selon ton avancement)
+Tu peux brancher le setTasks sur :
+
+soit du Zustand local si tu veux avancer vite,
+
+soit un document Firebase lié au projet {projectId}/todoList,
+
+soit une simple API Node.js si tu préfères contrôler le backend.
+
+🧠 Évolutions prévues plus tard
+Filtres : par échéance, par responsable, par statut
+
+Intégration à la dashboard "Relances à faire"
+
+Notification deadline imminente
+
+Lien avec d'autres blocs (ex: roadshow, process update)

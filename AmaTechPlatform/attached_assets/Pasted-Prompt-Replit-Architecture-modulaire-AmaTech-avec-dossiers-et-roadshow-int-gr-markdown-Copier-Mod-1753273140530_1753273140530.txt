@@ -1,0 +1,170 @@
+Prompt Replit : Architecture modulaire AmaTech avec dossiers et roadshow intégré
+markdown
+Copier
+Modifier
+🛠️ Projet : AmaTech – Plateforme interne pour Amala Partners
+
+🎯 Objectif :
+Créer une plateforme interne modulaire pour les équipes M&A d’Amala Partners, organisée autour de **dossiers** (un dossier = un mandat client de type cession, acquisition ou levée de fonds).
+
+Chaque dossier regroupe les outils suivants :
+- Roadshow acheteurs
+- CRM lié au process
+- Timeline du deal
+- Générateur d’update hebdomadaire
+- Espace documents / livrables
+- Statistiques du process
+
+🌐 Stack :
+- Frontend : React + Tailwind CSS
+- Backend : Node.js (Express ou Next.js API routes)
+- BDD : SQLite (via Prisma) – ou Supabase selon évolutions
+- API : REST (ou GraphQL plus tard)
+- Langue : 🇫🇷 (application en français)
+
+---
+
+## 📁 Pages principales (routing React)
+
+/dossiers → Vue d’ensemble des dossiers actifs / passés
+/dossiers/:id → Page dossier (vue générale)
+/dossiers/:id/roadshow → Module Roadshow acheteurs
+/dossiers/:id/crm → Vue CRM (contacts liés)
+/dossiers/:id/timeline → Avancement du process
+/dossiers/:id/updates → Générateur d’email + slides
+/dossiers/:id/documents → Suivi des fichiers envoyés
+
+kotlin
+Copier
+Modifier
+
+---
+
+## 🧱 Modèle de données (via Prisma)
+
+```prisma
+model Dossier {
+  id             String   @id @default(uuid())
+  nom            String
+  type           DossierType
+  statut         DossierStatut
+  date_debut     DateTime
+  date_cloture   DateTime?
+  client_id      String? // FK future
+  description    String?
+  equipe_interne String[]
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  societes       Societe[]
+  interactions   Interaction[]
+}
+
+enum DossierType {
+  CESSION
+  ACQUISITION
+  LEVEE
+}
+
+enum DossierStatut {
+  ACTIF
+  CLOTURE
+  PERDU
+  PAUSE
+}
+
+model Societe {
+  id           String   @id @default(uuid())
+  nom          String
+  secteur      String?
+  site_web     String?
+  description  String?
+  est_acheteur Boolean  @default(false)
+  est_client   Boolean  @default(false)
+  dossier_id   String
+  dossier      Dossier  @relation(fields: [dossier_id], references: [id])
+  contacts     Contact[]
+  interactions Interaction[]
+  created_at   DateTime @default(now())
+}
+
+model Contact {
+  id            String   @id @default(uuid())
+  nom_complet   String
+  poste         String?
+  email         String?
+  téléphone     String?
+  linkedin      String?
+  notes         String?
+  societe_id    String
+  societe       Societe  @relation(fields: [societe_id], references: [id])
+  interactions  Interaction[]
+  created_at    DateTime @default(now())
+}
+
+model Interaction {
+  id           String   @id @default(uuid())
+  type         InteractionType
+  date         DateTime
+  notes        String?
+  dossier_id   String
+  societe_id   String
+  contact_id   String?
+  auteur       String?
+  created_at   DateTime @default(now())
+
+  dossier      Dossier  @relation(fields: [dossier_id], references: [id])
+  societe      Societe  @relation(fields: [societe_id], references: [id])
+  contact      Contact? @relation(fields: [contact_id], references: [id])
+}
+
+enum InteractionType {
+  APPEL
+  EMAIL
+  REUNION
+  NDA_ENVOYE
+  NDA_SIGNE
+  IOI
+  CIM
+  AUTRE
+}
+✅ Fonctionnalités MVP à implémenter
+Page d’accueil /dossiers
+Liste des dossiers en cours
+
+Bouton "Créer un nouveau dossier"
+
+Carte par dossier : nom, statut, date de début, avancement
+
+Page dossier /dossiers/:id
+Sidebar navigation :
+
+Vue générale
+
+Roadshow
+
+CRM
+
+Timeline
+
+Updates
+
+Documents
+
+Module Roadshow /dossiers/:id/roadshow
+Vue Kanban des sociétés par statut (non contacté, NDA envoyé, etc.)
+
+Ajout société + contact
+
+Ajout interaction (call, email, etc.)
+
+Champs : société, contact, statut, dernier échange, relance
+
+Filtrage par statut / recherche
+
+💡 Notes de dev
+Le module Roadshow existant doit être modifié pour inclure dossier_id dans toutes les requêtes
+
+L’interface doit afficher uniquement les sociétés liées au dossier courant
+
+Les interactions sont historisées avec la société et le contact

@@ -1,0 +1,82 @@
+**💡 Replit Prompt Sprint Suivant — Module Roadshow (AmaTech)**
+
+Nous poursuivons le développement du module Roadshow sur la base du prompt initial déjà en place. Ce sprint se concentre sur **l’enrichissement fonctionnel de la vue tabulaire**.
+
+---
+
+## ✅ Objectifs de ce sprint (complément du module déjà en place)
+
+### ✅ Corrections et ajustements UI
+
+1. **Contact :**
+   - Supprimer le caractère `-` affiché par défaut s’il n’y a pas de contact
+   - Ne garder que l’icône ✉️ (cliquable pour afficher ou modifier le contact)
+
+2. **Interactions :**
+   - Afficher le **nombre total d’interactions** (événements type `interaction`)
+   - Exemple : 💬 ×3 (clic = drawer avec historique)
+
+### 📅 Nouvelles colonnes avec input date (format teaser) :
+
+3. **NDA :**
+   - Même comportement que teaser
+   - Enregistrement sous forme d’un `roadshow_event` de type `nda`
+
+4. **IM :**
+   - Même logique que NDA
+   - `roadshow_event` type `im`
+
+5. **BP :**
+   - Idem → `roadshow_event` type `bp`
+
+### 🧑‍💼 Meetings : multiples (comme relances)
+
+6. **Meetings** :
+   - Colonne avec :
+     - Dernier meeting (date)
+     - Clic → affiche l’historique + possibilité d’en ajouter d’autres
+   - Enregistrement dans `roadshow_event` type `meeting`
+   - Pas de “prochaine réunion” à planifier (≠ relance)
+
+### 🚩 Phase 2 toggle + infos conditionnelles
+
+7. **Phase 2 :**
+   - Ajouter un toggle booléen `phase2_ok` (editable inline ou via drawer)
+   - Si activé, on affiche 2 champs supplémentaires :
+     - **Dataroom envoyée** → `dataroom_sent_at`
+     - **Binding Offer** → `binding_offer_at`
+   - Champs = `roadshow_event` ou `roadshow_phase2` (selon design backend adopté)
+
+---
+
+## 🧱 Backend / Drizzle à compléter
+
+### Table `roadshow_event` :
+```ts
+// Déjà défini dans le sprint précédent
+// Ajouter si manquant dans enum `type` :
+'type': enum('interaction', 'teaser', 'followup', 'nda', 'im', 'bp', 'extra_send', 'meeting', 'ioi', 'dataroom', 'binding')
+```
+
+### Table `roadshow_phase2`
+```ts
+phase2_ok boolean default false
+dataroom_sent_at date
+binding_offer_at date
+```
+
+---
+
+## 🖥️ Frontend React : Implémentation cible
+
+| Colonne             | Type         | UX                                                    |
+|---------------------|--------------|--------------------------------------------------------|
+| Contact              | Icone        | Icône ✉️ seule. Si vide : pas de texte `-`             |
+| Interactions         | Icone + nb   | 💬 ×3 — clic → drawer avec historique                  |
+| NDA / IM / BP        | Date picker  | Inline comme Teaser (enregistrement dans events)       |
+| Meetings             | Date picker  | Dernier + clic → drawer historique + ajout             |
+| Phase 2              | Toggle       | Si activé → affiche dataroom + binding (date pickers) |
+
+---
+
+🎯 Objectif de ce sprint : finaliser les composantes principales d’un **tableau M&A complet, interactif, persistant et exploitable**, pour le suivi fin et lisible des contreparties en process.
